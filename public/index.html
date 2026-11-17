@@ -61,10 +61,10 @@
   <!-- ==========================================
        THANH TRÊN CÙNG (TOPBAR KIỂU YOUTUBE: LOGO TRÁI + TÌM/CHỌN KHÁCH GIỮA + HÀNH ĐỘNG PHẢI)
        ========================================== -->
-  <header class="bg-white border-b border-slate-200/90 sticky top-0 z-40 h-16 flex items-center px-3.5 sm:px-5 no-print">
-    <div class="w-full flex items-center justify-between gap-3">
+  <header class="bg-white border-b border-slate-200/90 sticky top-0 z-40 min-h-14 py-2 flex items-center px-2.5 sm:px-5 no-print">
+    <div class="w-full flex flex-wrap items-center justify-between gap-2">
       <!-- Cụm trái: Nút thu/mở Sidebar + Logo thương hiệu -->
-      <div class="flex items-center gap-2.5 shrink-0">
+      <div class="flex items-center gap-2 shrink-0">
         <button
           type="button"
           id="btn-toggle-sidebar"
@@ -73,12 +73,12 @@
         >
           Menu
         </button>
-        <a href="#" class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-2xl bg-brand-700 text-white flex items-center justify-center font-black text-sm shadow-xs">
+        <a href="#" class="flex items-center gap-2">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-700 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-xs">
             SR
           </div>
           <div>
-            <h1 class="font-extrabold text-slate-900 text-base leading-none">StarRewards</h1>
+            <h1 class="font-extrabold text-slate-900 text-sm sm:text-base leading-none">StarRewards</h1>
             <span class="hidden sm:block text-[11px] font-medium text-slate-500 mt-0.5">Loyalty &amp; QR System</span>
           </div>
         </a>
@@ -100,19 +100,19 @@
         />
       </div>
 
-      <!-- Cụm phải: Nút Mở Thẻ Mới & Nút Nạp Dữ Liệu Mẫu -->
-      <div class="flex items-center gap-2 shrink-0">
+      <!-- Cụm phải: Nút Mở Thẻ Mới & Nút Nạp Dữ Liệu Mẫu (Vừa khít 100% khung 360px) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button
           type="button"
           id="btn-open-register-modal"
-          class="touch-target px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold whitespace-nowrap transition-colors"
+          class="touch-target px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] sm:text-xs font-bold whitespace-nowrap transition-colors"
         >
           + Mở Thẻ Mới
         </button>
         <button
           type="button"
           id="btn-reset-sample-desktop"
-          class="touch-target px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold whitespace-nowrap transition-colors"
+          class="touch-target px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[11px] sm:text-xs font-bold whitespace-nowrap transition-colors"
         >
           Nạp Dữ Liệu Mẫu
         </button>
