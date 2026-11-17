@@ -117,7 +117,47 @@ function getTierBadgeStyle(tier) {
   return 'bg-amber-100 text-amber-900 border-amber-300';
 }
 
+/**
+ * Phát âm thanh tín hiệu máy POS (Web Audio API - Hoạt động 100% Offline)
+ */
+function playPosSound(type = 'beep') {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, ctx.currentTime);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.22);
+    } else if (type === 'tierup') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.32);
+    } else {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1046.5, ctx.currentTime);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    }
+  } catch (_) {}
+}
+
 function showToast(message, type = 'success') {
+  if (type === 'error') playPosSound('error');
+  else if (String(message).includes('THĂNG HẠNG')) playPosSound('tierup');
+  else playPosSound('beep');
+
   const toast = document.getElementById('global-toast');
   if (!toast) return;
   const styles =
@@ -257,15 +297,36 @@ function renderStatsBar() {
   document.getElementById('stat-issued-points').textContent = formatNumber(totalIssued);
   document.getElementById('stat-tx-count').textContent = `${txs.length} giao dịch trong sổ`;
   document.getElementById('stat-wallet-count').textContent = String(wallet.length);
+
+  // Thanh tỷ lệ 3 hạng trực quan
+  const totalM = Math.max(1, members.length);
+  const bPct = Math.round((bronze / totalM) * 100);
+  const sPct = Math.round((silver / totalM) * 100);
+  const gPct = Math.max(0, 100 - bPct - sPct);
+
+  const ratioBar = document.getElementById('stat-tier-progress-multi');
+  const ratioLabel = document.getElementById('stat-tier-percent-label');
+  if (ratioLabel) {
+    ratioLabel.textContent = `Đồng: ${bPct}% · Bạc: ${sPct}% · Vàng: ${gPct}%`;
+  }
+  if (ratioBar) {
+    ratioBar.innerHTML = `
+      <div style="width:${bPct}%" class="bg-amber-600 h-full transition-all" title="Hạng Đồng: ${bronze}"></div>
+      <div style="width:${sPct}%" class="bg-slate-500 h-full transition-all" title="Hạng Bạc: ${silver}"></div>
+      <div style="width:${gPct}%" class="bg-yellow-500 h-full transition-all" title="Hạng Vàng: ${gold}"></div>
+    `;
+  }
 }
 
 function renderMemberSelector() {
   const selectEl = document.getElementById('select-active-member');
+  const selectMobileEl = document.getElementById('select-active-member-mobile');
   const chipsBar = document.getElementById('member-chips-bar');
   const searchInput = document.getElementById('member-quick-search');
-  if (!selectEl || !chipsBar) return;
+  const searchMobileInput = document.getElementById('member-quick-search-mobile');
+  if (!chipsBar) return;
 
-  const q = String(searchInput?.value || '').trim().toLowerCase();
+  const q = String(searchInput?.value || searchMobileInput?.value || '').trim().toLowerCase();
   const filteredMembers = (appState.members || []).filter((m) => {
     if (!q) return true;
     return (
@@ -275,7 +336,7 @@ function renderMemberSelector() {
     );
   });
 
-  selectEl.innerHTML = (appState.members || [])
+  const optionsHtml = (appState.members || [])
     .map(
       (m) => `
       <option value="${escapeHtml(m.id)}" ${m.id === currentMemberId ? 'selected' : ''}>
@@ -284,6 +345,9 @@ function renderMemberSelector() {
     `
     )
     .join('');
+
+  if (selectEl) selectEl.innerHTML = optionsHtml;
+  if (selectMobileEl) selectMobileEl.innerHTML = optionsHtml;
 
   chipsBar.innerHTML = filteredMembers
     .map((m) => {
@@ -841,6 +905,7 @@ function updatePosPreview() {
   const memberInput = document.getElementById('pos-member-id');
   const amountInput = document.getElementById('pos-amount-vnd');
   const previewBox = document.getElementById('pos-preview-box');
+  const counterVouchersBox = document.getElementById('counter-member-vouchers-box');
   if (!previewBox) return;
 
   const memberId = String(memberInput?.value || '').trim().toUpperCase();
@@ -851,6 +916,7 @@ function updatePosPreview() {
     previewBox.innerHTML = memberId
       ? `<span class="text-red-600 font-bold">Không tìm thấy mã thành viên "${escapeHtml(memberId)}".</span>`
       : 'Nhập Mã thành viên và Số tiền để xem trước số điểm cộng thêm.';
+    counterVouchersBox?.classList.add('hidden');
     return;
   }
 
@@ -865,6 +931,36 @@ function updatePosPreview() {
       <span class="font-extrabold text-brand-700">Điểm cộng: +${formatNumber(pointsToAdd)} điểm -> Số dư mới: ${formatNumber(newBalance)} điểm (${escapeHtml(newTier)})</span>
     </div>
   `;
+
+  // Hiển thị các Voucher chưa dùng của khách hàng này ngay tại Quầy
+  if (counterVouchersBox) {
+    const unusedVouchers = (appState.vouchersWallet || []).filter(
+      (v) => v.memberId === member.id && v.status !== 'Đã sử dụng'
+    );
+    if (unusedVouchers.length === 0) {
+      counterVouchersBox.classList.add('hidden');
+    } else {
+      counterVouchersBox.classList.remove('hidden');
+      counterVouchersBox.innerHTML = `
+        <div class="font-bold text-indigo-900">Khách hàng đang có ${unusedVouchers.length} Voucher khả dụng trong Ví:</div>
+        <div class="flex flex-wrap gap-2">
+          ${unusedVouchers
+            .map(
+              (v) => `
+              <button
+                type="button"
+                data-pos-use-voucher="${escapeHtml(v.voucherCode)}"
+                class="btn-pos-use-voucher px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors"
+              >
+                Áp dụng ${escapeHtml(v.rewardName)} (${escapeHtml(v.voucherCode)})
+              </button>
+            `
+            )
+            .join('')}
+        </div>
+      `;
+    }
+  }
 }
 
 function handleCounterEarnSubmit(event) {
@@ -1188,14 +1284,59 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-reset-sample-desktop')?.addEventListener('click', resetToBtcSampleData);
   document.getElementById('btn-reset-sample-mobile')?.addEventListener('click', resetToBtcSampleData);
 
-  // Chọn thành viên trên dropdown & thanh chip
+  // Chọn thành viên trên dropdown & thanh chip (Desktop + Mobile)
   document.getElementById('select-active-member')?.addEventListener('change', (e) => {
     currentMemberId = e.target.value;
     document.getElementById('redeem-feedback')?.classList.add('hidden');
     renderAll();
   });
+  document.getElementById('select-active-member-mobile')?.addEventListener('change', (e) => {
+    currentMemberId = e.target.value;
+    document.getElementById('redeem-feedback')?.classList.add('hidden');
+    renderAll();
+  });
 
-  document.getElementById('member-quick-search')?.addEventListener('input', renderMemberSelector);
+  document.getElementById('member-quick-search')?.addEventListener('input', (e) => {
+    const mSearch = document.getElementById('member-quick-search-mobile');
+    if (mSearch) mSearch.value = e.target.value;
+    renderMemberSelector();
+  });
+  document.getElementById('member-quick-search-mobile')?.addEventListener('input', (e) => {
+    const dSearch = document.getElementById('member-quick-search');
+    if (dSearch) dSearch.value = e.target.value;
+    renderMemberSelector();
+  });
+
+  // Áp dụng Voucher của khách ngay tại Quầy Thu Ngân
+  document.getElementById('counter-member-vouchers-box')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-pos-use-voucher');
+    if (!btn) return;
+    const vCode = btn.getAttribute('data-pos-use-voucher');
+    const foundVoucher = (appState.vouchersWallet || []).find((v) => v.voucherCode === vCode);
+    if (foundVoucher && foundVoucher.status !== 'Đã sử dụng') {
+      foundVoucher.status = 'Đã sử dụng';
+      foundVoucher.usedAt = formatNowTimestamp();
+      saveState();
+      renderAll();
+      showToast(`Thu ngân đã áp dụng Voucher ${vCode} (${foundVoucher.rewardName}) cho khách ${foundVoucher.memberId}!`, 'success');
+    }
+  });
+
+  // Thiết bị ngoại vi: Máy quét mã QR cầm tay USB (Enter hoặc nút Đọc Mã)
+  const usbInput = document.getElementById('usb-scanner-input');
+  function triggerUsbScan() {
+    const code = String(usbInput?.value || '').trim();
+    if (!code) return;
+    usbInput.value = '';
+    handleDecodedQrPayload(code, 'Máy Quét Ngoại Vi USB');
+  }
+  document.getElementById('btn-usb-scan-submit')?.addEventListener('click', triggerUsbScan);
+  usbInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      triggerUsbScan();
+    }
+  });
 
   document.getElementById('member-chips-bar')?.addEventListener('click', (e) => {
     const chip = e.target.closest('.btn-member-chip');
