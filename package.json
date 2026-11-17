@@ -1,0 +1,21 @@
+{
+  "name": "spyt-vibe-coding-2026-finals",
+  "version": "1.0.0",
+  "description": "San pham du thi Vong Chung Ket Vibe Coding 2026 - Doi SpyT (Bang A)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "xlsx": "^0.18.5"
+  }
+}

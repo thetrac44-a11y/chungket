@@ -1,0 +1,62 @@
+/**
+ * public/css/style.css
+ * Giao diện tối giản, sang trọng theo phong cách Starbucks Rewards
+ */
+
+html,
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-width: 100%;
+  overflow-x: clip;
+  font-size: 16px;
+  line-height: 1.5;
+  background-color: #f8fafc;
+}
+
+.touch-target {
+  min-height: 44px;
+}
+
+/* Thẻ Thành Viên 3 Hạng Sang Trọng (Đồng / Bạc / Vàng) */
+.member-card-bronze {
+  background: linear-gradient(135deg, #451a03 0%, #92400e 50%, #d97706 100%);
+  color: #ffffff;
+  box-shadow: 0 20px 38px -12px rgba(146, 64, 14, 0.45);
+}
+
+.member-card-silver {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 55%, #64748b 100%);
+  color: #ffffff;
+  box-shadow: 0 20px 38px -12px rgba(30, 41, 59, 0.45);
+}
+
+.member-card-gold {
+  background: linear-gradient(135deg, #422006 0%, #a16207 45%, #eab308 100%);
+  color: #ffffff;
+  box-shadow: 0 20px 38px -12px rgba(161, 98, 7, 0.5);
+}
+
+/* Thanh cuộn ngang mượt cho dãy nút chọn thành viên */
+.no-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+@keyframes pulsePop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+.animate-tier-up {
+  animation: pulsePop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
